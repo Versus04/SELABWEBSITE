@@ -1,3 +1,3 @@
 pip install -r requirements.txt
-apt-get install build-essentials
+apt-get install build-essential
 
