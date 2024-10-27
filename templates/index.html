@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCare ChatBot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-100 to-blue-200 min-h-screen">
+    <div class="container mx-auto p-4 md:p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-800">HealthCare ChatBot</h1>
+            <a href="{{ url_for('history') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                View History
+            </a>
+        </div>
+        <div id="chat-container" class="space-y-6 max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <div class="mb-4">
+                <label for="name" class="block mb-2 text-lg font-medium text-gray-700">Your Name:</label>
+                <input type="text" id="name" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+            </div>
+            <div id="initial-symptom" class="mb-4">
+                <label for="symptom" class="block mb-2 text-lg font-medium text-gray-700">What symptom are you experiencing?</label>
+                <select id="symptom" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+                    <option value="">Select a symptom</option>
+                </select>
+            </div>
+            <div id="days-input" class="mb-4 hidden">
+                <label for="days" class="block mb-2 text-lg font-medium text-gray-700">For how many days have you been experiencing these symptoms?</label>
+                <input type="number" id="days" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" min="1">
+            </div>
+            <button id="start-diagnosis" class="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 transform hover:scale-105">Start Diagnosis</button>
+        </div>
+        <div id="chat-history" class="mt-8 space-y-4 max-w-2xl mx-auto"></div>
+        <div id="result" class="mt-8 max-w-2xl mx-auto"></div>
+    </div>
+
+    <script>
+        const symptomSelect = document.getElementById('symptom');
+        const startDiagnosisButton = document.getElementById('start-diagnosis');
+        const chatHistory = document.getElementById('chat-history');
+        const resultDiv = document.getElementById('result');
+        const daysInput = document.getElementById('days-input');
+        
+        let currentSymptom = '';
+        let symptomsPresent = [];
+        
+        // Fetch symptoms and populate the select element
+        axios.get('/get_symptoms')
+            .then(response => {
+                response.data.forEach(symptom => {
+                    const option = document.createElement('option');
+                    option.value = symptom;
+                    option.textContent = symptom.replace('_', ' ');
+                    symptomSelect.appendChild(option);
+                });
+            });
+        
+        function addChatMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `p-4 rounded-lg shadow transition-all duration-300 ease-in-out ${isUser ? 'bg-blue-100 ml-auto' : 'bg-white'} max-w-3/4 ${isUser ? 'text-right' : 'text-left'}`;
+            messageDiv.textContent = message;
+            chatHistory.appendChild(messageDiv);
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function askNextSymptom(symptom) {
+            addChatMessage(`Are you experiencing ${symptom.replace('_', ' ')}?`);
+            const yesNoDiv = document.createElement('div');
+            yesNoDiv.className = 'flex justify-end space-x-4 mt-4';
+            ['Yes', 'No'].forEach(answer => {
+                const button = document.createElement('button');
+                button.className = 'bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200 transform hover:scale-105';
+                button.textContent = answer;
+                button.onclick = () => handleSymptomResponse(answer === 'Yes', symptom);
+                yesNoDiv.appendChild(button);
+            });
+            chatHistory.appendChild(yesNoDiv);
+        }
+        
+        function handleSymptomResponse(isPresent, symptom) {
+            addChatMessage(isPresent ? 'Yes' : 'No', true);
+            if (isPresent) {
+                symptomsPresent.push(symptom);
+            }
+            getNextSymptom(symptom);
+        }
+        
+        function getNextSymptom(symptom) {
+            axios.post('/get_next_symptom', {
+                current_symptom: symptom,
+                symptoms_present: symptomsPresent,
+                days: document.getElementById('days').value
+            })
+            .then(response => {
+                if (response.data.is_prediction) {
+                    displayDiagnosis(response.data);
+                } else {
+                    askNextSymptom(response.data.next_symptom);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addChatMessage('An error occurred during diagnosis.');
+            });
+        }
+        
+        function displayDiagnosis(data) {
+            // Create the overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50';
+            overlay.style.backdropFilter = 'blur(5px)';
+
+            // Create the popup container
+            const popup = document.createElement('div');
+            popup.className = 'bg-white rounded-lg p-8 max-w-2xl max-h-[80vh] overflow-auto relative';
+
+            // Create close button
+            const closeButton = document.createElement('button');
+            closeButton.textContent = '×';
+            closeButton.className = 'absolute top-4 right-4 text-2xl font-bold text-gray-500 hover:text-gray-700 focus:outline-none';
+            closeButton.onclick = () => document.body.removeChild(overlay);
+
+            // Create the content for the diagnosis
+            popup.innerHTML = `
+                <h2 class="text-3xl font-bold mb-6 text-blue-800">Diagnosis Result</h2>
+                <p class="mb-4"><strong class="text-blue-600">Disease:</strong> <span class="text-gray-800">${data.disease}</span></p>
+                <p class="mb-4"><strong class="text-blue-600">Description:</strong> <span class="text-gray-800">${data.description}</span></p>
+                <p class="mb-4"><strong class="text-blue-600">Precautions:</strong> <span class="text-gray-800">${data.precautions.join(', ')}</span></p>
+                <p class="mb-4"><strong class="text-blue-600">Severity Assessment:</strong> <span class="text-gray-800">${data.severity_assessment}</span></p>
+            `;
+
+            // Append close button and popup to overlay
+            popup.appendChild(closeButton);
+            overlay.appendChild(popup);
+
+            // Add the overlay to the page
+            document.body.appendChild(overlay);
+
+            // Add fade-in animation
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                popup.style.transform = 'scale(1)';
+            }, 10);
+            overlay.style.transition = 'opacity 0.3s ease-out';
+            overlay.style.opacity = '0';
+            popup.style.transition = 'transform 0.3s ease-out';
+            popup.style.transform = 'scale(0.9)';
+        }
+        
+        startDiagnosisButton.addEventListener('click', () => {
+            const name = document.getElementById('name').value;
+            currentSymptom = symptomSelect.value;
+            
+            if (!name || !currentSymptom) {
+                alert('Please enter your name and select an initial symptom.');
+                return;
+            }
+            
+            document.getElementById('initial-symptom').classList.add('hidden');
+            daysInput.classList.remove('hidden');
+            startDiagnosisButton.classList.add('hidden');
+            
+            addChatMessage(`Hello, ${name}! Let's start the diagnosis process.`);
+            symptomsPresent.push(currentSymptom);
+            addChatMessage(`You mentioned that you're experiencing ${currentSymptom.replace('_', ' ')}.`, true);
+            getNextSymptom(currentSymptom);
+        });
+
+        // Add fade-in animation for the main container
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.container');
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(20px)';
+            container.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            setTimeout(() => {
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

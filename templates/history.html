@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare ChatBot History</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --label-color: #7f8c8d;
+            --error-color: #e74c3c;
+            --border-color: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        h1, h2 {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .history-container {
+            background-color: var(--card-background);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .history-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .history-item {
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .history-item:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            margin: -10px -10px 14px -10px;
+        }
+
+        .history-item h3 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            font-size: 1.2em;
+        }
+
+        .history-item p {
+            margin: 8px 0;
+        }
+
+        .label {
+            font-weight: bold;
+            color: var(--label-color);
+            margin-right: 5px;
+        }
+
+        .error {
+            color: var(--error-color);
+            background-color: #fadbd8;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .timestamp {
+            font-size: 0.9em;
+            color: var(--label-color);
+            font-style: italic;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .history-container {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Your Health History</h1>
+    
+    <div class="history-container">
+        <h2>Confirmed Symptoms</h2>
+        {% if symptoms %}
+            {% for symptom in symptoms %}
+            <div class="history-item">
+                <h3>{{ symptom['symptom'] }}</h3>
+                <p><span class="label">Severity:</span> {{ symptom['severity'] or 'Unknown' }}</p>
+                
+                <p class="timestamp"><span class="label">Reported:</span> {{ symptom['timestamp'] }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="error">No symptoms have been reported yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="history-container">
+        <h2>Diagnosed Diseases</h2>
+        {% if diseases %}
+            {% for disease in diseases %}
+            <div class="history-item">
+                <h3>{{ disease['disease'] }}</h3>
+                <p><span class="label">Precautions:</span> {{ disease['precautions'] or 'No specific precautions available' }}</p>
+                <p class="timestamp"><span class="label">Diagnosed:</span> {{ disease['timestamp'] }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="error">No diseases have been diagnosed yet.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

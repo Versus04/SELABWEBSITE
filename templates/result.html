@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+</head>
+<body>
+    <h1>Prediction Result</h1>
+    <p>Predicted Disease: {{ disease }}</p>
+    <h2>Description:</h2>
+    <p>{{ description }}</p>    
+    <h2>Precautions:</h2>
+    <ul>
+    {% for precaution in precautions %}
+        <li>{{ precaution }}</li>
+    {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}">Make another prediction</a>
+</body>
+</html>
