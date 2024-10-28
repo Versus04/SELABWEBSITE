@@ -156,20 +156,11 @@ The application uses Python's built-in logging module with INFO level logging. L
 - 🔐 Error handling for file operations and database connections
 
 ## ⚡ Performance
-- 📈 The model achieves approximately 98% accuracy (adjusted)
+- 📈 The model achieves approximately 98% accuracy
 - ⚡ Symptoms are processed in real-time
 - 🚀 Database operations are optimized with proper indexing
 
-## 🔮 Future Improvements
-1. 🔐 Implementation of user authentication system
-2. 🤖 Addition of more sophisticated ML models
-3. 🔄 Integration with external medical databases
-4. 📱 Mobile application development
-5. 🌍 Multi-language support
-6. 📊 Enhanced visualization of symptom-disease relationships
 
-## 🤝 Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 [Add your license information here]
